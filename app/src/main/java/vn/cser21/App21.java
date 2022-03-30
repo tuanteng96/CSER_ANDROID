@@ -301,6 +301,11 @@ public class App21 {
         }
     }
 
+    //TuanDev Finish App
+    void FINISH_ACTIVITY(final Result result) {
+        ((Activity)mContext).finish();
+    }
+
     void BASE64(final Result result) {
         final App21 t = this;
         new Runnable() {

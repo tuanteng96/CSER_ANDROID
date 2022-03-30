@@ -686,21 +686,21 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         return File.createTempFile(imageFileName, ".jpg", storageDir);
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
-        if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            switch (keyCode) {
-                case KeyEvent.KEYCODE_BACK:
-                    if (wv.canGoBack()) {
-                        wv.goBack();
-                    } else {
-                        finish();
-                    }
-                    return true;
-            }
-        }
-        return super.onKeyDown(keyCode, event);
-    }
+//    @Override
+//    public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
+//        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+//            switch (keyCode) {
+//                case KeyEvent.KEYCODE_BACK:
+//                    if (wv.canGoBack()) {
+//                        wv.goBack();
+//                    } else {
+//                        finish();
+//                    }
+//                    return true;
+//            }
+//        }
+//        return super.onKeyDown(keyCode, event);
+//    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -710,16 +710,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     @Override
     public void onBackPressed() {
+        String script = "ToBackBrowser()";
+        evalJs(script);
 
-
-        if (!ANDROID.IsPrepend) {
-            ANDROID.IsPrepend = true;
-            JavaScript("ANDROID_ONBACK");
-            return;
-        }
-
-        ANDROID.BackReset();
-        super.onBackPressed();
+//        if (!ANDROID.IsPrepend) {
+//            ANDROID.IsPrepend = true;
+//            JavaScript("ANDROID_ONBACK");
+//            return;
+//        }
+//
+//        ANDROID.BackReset();
+//        super.onBackPressed();
 
     }
 
