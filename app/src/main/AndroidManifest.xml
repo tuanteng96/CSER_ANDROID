@@ -35,10 +35,11 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" /> <!-- Allows access to the flashlight -->
-    <permission
-        android:name="android.permission.FLASHLIGHT"
-        android:permissionGroup="android.permission-group.HARDWARE_CONTROLS"
-        android:protectionLevel="normal" />
+    <!--    <permission-->
+    <!--        android:name="android.permission.FLASHLIGHT"-->
+    <!--        tools:node="remove"-->
+    <!--        android:permissionGroup="android.permission-group.HARDWARE_CONTROLS"-->
+    <!--        android:protectionLevel="normal" />-->
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
@@ -61,8 +62,7 @@
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
-            tools:targetApi="o_mr1"
-             />
+            tools:targetApi="o_mr1" />
         <activity
             android:name=".incoming.IncomingCallActivity"
             android:exported="true"
@@ -92,7 +92,7 @@
             android:value="channel_id" /> <!-- @drawable/ic_stat_name: Ảnh PNG với nèn trong suốt -->
         <service
             android:name="vn.cser21.MyFirebaseMessagingService"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
@@ -101,15 +101,15 @@
         <receiver
             android:name="vn.cser21.BroadcastReceiver21"
             android:enabled="false"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
 
             </intent-filter>
         </receiver>
         <receiver
             android:name="vn.cser21.AlarmReceiver21"
-            android:exported="true"
+            android:exported="false"
             android:process=":remote" />
 
         <provider
@@ -119,17 +119,17 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+                android:resource="@xml/file_paths"></meta-data>
         </provider>
 
         <service
             android:name=".incoming.IncomingCallNotificationService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false" />
 
         <receiver
             android:name=".incoming.IncomingCancelReceiver"
-            android:exported="true" />
+            android:exported="false" />
 
     </application>
 
