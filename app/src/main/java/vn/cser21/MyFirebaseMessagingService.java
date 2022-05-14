@@ -50,18 +50,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         super.onMessageReceived(remoteMessage);
         // TODO(developer): Handle FCM messages here.
         Map<String, String> data = remoteMessage.getData();
-        Log.d("TAG", "data " + data);
-
-        // vì mình đổi key json rồi nên giờ chỉ cần truyền data vào để lấy
-        if (Objects.equals(data.get("type"), "call")) return;
-        sendNotification(data);
+        Log.d("onMessageReceived", "data " + data);
     }
 
     @Override
     public void handleIntent(@NonNull Intent intent) {
         String type = intent.getStringExtra("type");
         if (type == null || type.isEmpty()) {
-            super.handleIntent(intent);
+            sendNotification(intent);
             return;
         }
         sendNotificationCall(intent);
@@ -100,6 +96,59 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public void sendNotification(Intent intentNoti) {
+        if (intentNoti.getStringExtra("body") == null) return;
+
+        // cái này là lấy nội dung từ trên server trả về
+        String content = intentNoti.getStringExtra("body").toString();
+        String title = intentNoti.getStringExtra("title").toString();
+
+        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        intent.putExtras(intentNoti.getExtras());
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "channel_id")
+                .setContentTitle(title)
+                .setContentText(content)
+                .setAutoCancel(true)
+                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                .setContentIntent(pendingIntent)
+                .setContentInfo(title)
+                .setLargeIcon(icon)
+                //.setColor(Color.RED)
+                //.setNumber(badgeCount)
+                .setLights(Color.RED, 1000, 300)
+                .setDefaults(Notification.DEFAULT_VIBRATE)
+                .setSmallIcon(R.drawable.ic_stat_name);
+
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Notification Channel is required for Android O and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "channel_id", "channel_name", NotificationManager.IMPORTANCE_DEFAULT
+            );
+            channel.setDescription("channel description");
+            channel.setShowBadge(true);
+            channel.canShowBadge();
+            channel.enableLights(true);
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{100, 200, 300, 400, 500});
+            notificationManager.createNotificationChannel(channel);
+        }
+        // muốn tạo nhiều notif thì phải cho thằng notification manager noti đến nhiều channel,
+        // không được trùng nhau
+        // vì vậy hàm new Random().nextInt() >> để tạo ra 1 channel ngẫu nhiên
+        notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
+        Log.e("On Click", "On Click");
     }
 
     /**
@@ -236,6 +285,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // không được trùng nhau
         // vì vậy hàm new Random().nextInt() >> để tạo ra 1 channel ngẫu nhiên
         notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
+        Log.e("On Click", "On Click");
     }
 
     //03/03/2022

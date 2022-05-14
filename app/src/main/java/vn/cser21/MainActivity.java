@@ -39,6 +39,8 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 
@@ -317,6 +319,27 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         setContentView(R.layout.activity_main);
 
+        // Get Token Key
+
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                            return;
+                        }
+
+                        // Get new FCM registration token
+                        String token = task.getResult();
+                        String name = getPackageName();
+                        SharedPreferences sharedPref = getSharedPreferences(name, Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPref.edit();
+                        editor.putString("FirebaseNotiToken", token);
+                        editor.commit();
+                    }
+                });
+
         //loadr
 
         //
@@ -403,6 +426,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent.getStringExtra("NOTI_ID") != null && intent.getStringExtra("click_action") != null)
+            if (!intent.getStringExtra("NOTI_ID").isEmpty() && !intent.getStringExtra("click_action").isEmpty()) {
+                Intent start = intent;
+                startActivity(start);
+                start = new Intent();
+                finish();
+            }
+    }
 
     @Override
     protected void onResume() {
