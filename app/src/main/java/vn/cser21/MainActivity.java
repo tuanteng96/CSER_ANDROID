@@ -429,8 +429,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (intent.getStringExtra("NOTI_ID") != null && intent.getStringExtra("click_action") != null)
-            if (!intent.getStringExtra("NOTI_ID").isEmpty() && !intent.getStringExtra("click_action").isEmpty()) {
+        if (intent.getStringExtra("NOTI_ID") != null)
+            if (!intent.getStringExtra("NOTI_ID").isEmpty()) {
                 Intent start = intent;
                 startActivity(start);
                 start = new Intent();
