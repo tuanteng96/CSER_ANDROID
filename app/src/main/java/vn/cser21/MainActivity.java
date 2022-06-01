@@ -134,6 +134,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         // call app
         Log.i("123321", event.duration + "---" + event.id);
 
+        String name = this.getPackageName();
+        SharedPreferences sharedPref = this.getSharedPreferences(name, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("NotiMp3Push", event.id+":"+ event.duration);
+        editor.commit();
+
         String script = "NotiMp3Push(" + event.id + ","+event.duration+")";
         // wv.evaluateJavascript(script, null);
 
