@@ -21,5 +21,6 @@ Cách tạo App
 - Kiểm tra các file MainActivity, build.gradle (APP, Project), gradle-wrapper, local.properties
 - Remove setting.setAppCacheEnabled(true) ở MainActivity
 - Ở hàm onRequestPermissionsResult thêm super.onRequestPermissionsResult(requestCode, permissions, grantResults); ở đầu hàm file MainActivity
+- Mở lại Android Studio
 
 
