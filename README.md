@@ -1,4 +1,5 @@
 # cser21_android
+
 for Android
 
 Cách tạo App
@@ -13,5 +14,10 @@ Cách tạo App
 
 - Đổi đường link "https://cser.vn/app/index21.aspx" thành link mới trong embed21.html
 
-- Chạy test
+- Chạy test 
+
+# Fix ANDROID
+# 1. Lỗi kotlin
+- Kiểm tra các file MainActivity, build.gradle (APP, Project), gradle-wrapper, local.properties
+
 
