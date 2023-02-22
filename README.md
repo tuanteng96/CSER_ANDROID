@@ -17,7 +17,7 @@ Cách tạo App
 - Chạy test 
 
 # Fix ANDROID
-# 1. Lỗi kotlin
+# 1. Lỗi kotlin Update
 - Kiểm tra các file MainActivity, build.gradle (APP, Project), gradle-wrapper, local.properties
 
 
