@@ -434,6 +434,20 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //DEV Open
         //wv.loadUrl("https://ezspa.online/app2021/embed.html");
         //DEV Open
+
+        getNotificationPermission();
+    }
+
+    public void getNotificationPermission(){
+        try {
+            if (Build.VERSION.SDK_INT > 32) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        202);
+            }
+        }catch (Exception e){
+
+        }
     }
 
     @Override
@@ -692,6 +706,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+        if (requestCode == 202) return;
         QRCodeFragment qrCodeFragment = QRCodeFragment.newInstance(new QRCodeFragment.QRCodeResult() {
             @Override
             public void onQRCode(String code) {

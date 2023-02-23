@@ -17,10 +17,29 @@ Cách tạo App
 - Chạy test 
 
 # Fix ANDROID
-# 1. Lỗi kotlin Update
+# 1. Update kotlin 1.8.0 Update
 - Kiểm tra các file MainActivity, build.gradle (APP, Project), gradle-wrapper, local.properties
 - Remove setting.setAppCacheEnabled(true) ở MainActivity
 - Ở hàm onRequestPermissionsResult thêm super.onRequestPermissionsResult(requestCode, permissions, grantResults); ở đầu hàm file MainActivity
 - Mở lại Android Studio
+
+# 2. Lỗi mất noti kotlin 1.8.0
+- Xin thêm quyền <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+- Thêm hàm :
+public void getNotificationPermission(){
+        try {
+            if (Build.VERSION.SDK_INT > 32) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        202);
+            }
+        }catch (Exception e){
+
+        }
+    }
+- Bỏ hàm getNotificationPermission () vào onCreate()
+
+# 3. Lỗi auto bật QR code
+- Ở hàm onPermissionsGranted thêm if (requestCode == 202) return;
 
 
