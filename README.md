@@ -25,7 +25,7 @@ Cách tạo App
 
 # 2. Lỗi mất noti kotlin 1.8.0
 - Xin thêm quyền `<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>`
-- Thêm hàm :
+- Thêm hàm dưới trên hàm onNewIntent :
 public void getNotificationPermission(){
         try {
             if (Build.VERSION.SDK_INT > 32) {
@@ -37,7 +37,7 @@ public void getNotificationPermission(){
 
         }
     }
-- Bỏ hàm getNotificationPermission () vào onCreate()
+- Bỏ hàm getNotificationPermission () vào cuối hàm onCreate()
 
 # 3. Lỗi auto bật QR code
 - Ở hàm onPermissionsGranted thêm if (requestCode == 202) return;
