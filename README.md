@@ -24,7 +24,7 @@ Cách tạo App
 - Mở lại Android Studio
 
 # 2. Lỗi mất noti kotlin 1.8.0
-- Xin thêm quyền "<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>"
+- Xin thêm quyền `<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>`
 - Thêm hàm :
 public void getNotificationPermission(){
         try {
