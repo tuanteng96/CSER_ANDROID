@@ -432,7 +432,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //DEV Remove
 
         //DEV Open
-        //wv.loadUrl("https://ezspa.online/app2021/embed.html");
+        //wv.loadUrl("https://903f-2405-4802-333-9380-c981-f275-ea5f-55fb.ap.ngrok.io/");
         //DEV Open
 
         getNotificationPermission();
@@ -707,24 +707,45 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
         if (requestCode == 202) return;
-        QRCodeFragment qrCodeFragment = QRCodeFragment.newInstance(new QRCodeFragment.QRCodeResult() {
-            @Override
-            public void onQRCode(String code) {
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        resultQrCode.success = true;
-                        resultQrCode.data = code;
-                        app21.App21Result(resultQrCode);
-                    }
-                }.run();
-            }
-        });
+        if (requestCode == 201) {
+            QRCodeFragment qrCodeFragment = QRCodeFragment.newInstance(new QRCodeFragment.QRCodeResult() {
+                @Override
+                public void onQRCode(String code) {
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            resultQrCode.success = true;
+                            resultQrCode.data = code;
+                            app21.App21Result(resultQrCode);
+                        }
+                    }.run();
+                }
+            });
 
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add(R.id.layout, qrCodeFragment)
-                .addToBackStack("QRCodeFragment")
-                .commit();
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.add(R.id.layout, qrCodeFragment)
+                    .addToBackStack("QRCodeFragment")
+                    .commit();
+        }
+//        if (requestCode == 202) return;
+//        QRCodeFragment qrCodeFragment = QRCodeFragment.newInstance(new QRCodeFragment.QRCodeResult() {
+//            @Override
+//            public void onQRCode(String code) {
+//                new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        resultQrCode.success = true;
+//                        resultQrCode.data = code;
+//                        app21.App21Result(resultQrCode);
+//                    }
+//                }.run();
+//            }
+//        });
+//
+//        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+//        ft.add(R.id.layout, qrCodeFragment)
+//                .addToBackStack("QRCodeFragment")
+//                .commit();
     }
 
     @Override
