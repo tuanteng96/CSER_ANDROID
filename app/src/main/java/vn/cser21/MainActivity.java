@@ -432,7 +432,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //DEV Remove
 
         //DEV Open
-        //wv.loadUrl("https://903f-2405-4802-333-9380-c981-f275-ea5f-55fb.ap.ngrok.io/");
+        //wv.loadUrl("https://ezs.vn/");
         //DEV Open
 
         getNotificationPermission();
