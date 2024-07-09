@@ -2,11 +2,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
+    compileSdk 34
     defaultConfig {
         applicationId "vn.cservn2020"
-        minSdkVersion 21
-        targetSdkVersion 33
+        minSdkVersion 23
+        targetSdk 34
         versionCode 4
         versionName "4"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
