@@ -33,6 +33,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.firebase.encoders.json.BuildConfig;
 import com.google.gson.Gson;
 import com.permissionx.guolindev.PermissionX;
 import com.permissionx.guolindev.callback.RequestCallback;
@@ -212,7 +213,9 @@ public class App21 {
             if (params == null || "".equals(params)) return map;
             for (String seg : params.split(",")) {
                 String[] arr = seg.split(":");
-                map.putIfAbsent(arr[0], arr.length > 1 ? arr[1] : null);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    map.putIfAbsent(arr[0], arr.length > 1 ? arr[1] : null);
+                }
             }
         } catch (Exception e) {
             //
