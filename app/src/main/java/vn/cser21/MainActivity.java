@@ -326,7 +326,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         setContentView(R.layout.activity_main);
         FirebaseApp.initializeApp(getApplicationContext());
-
         // Get Token Key
 
         FirebaseMessaging.getInstance().getToken()
