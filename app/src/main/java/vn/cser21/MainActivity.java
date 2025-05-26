@@ -41,6 +41,7 @@ import android.webkit.WebViewClient;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 
@@ -324,6 +325,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         setContentView(R.layout.activity_main);
+        FirebaseApp.initializeApp(getApplicationContext());
 
         // Get Token Key
 
