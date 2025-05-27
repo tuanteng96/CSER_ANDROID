@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -203,11 +204,20 @@ public class DownloadFilesTask extends AsyncTask<String, String, String> {
                 x.len = f.length();
                 x.abspath = f.getAbsolutePath();
                 try {
-                    BasicFileAttributes attr = Files.readAttributes(Paths.get(x.abspath), BasicFileAttributes.class);
-                    FileTime c = attr.creationTime();
-                    FileTime l = attr.lastAccessTime();
-                    x.create = new Date(c.toMillis());
-                    x.last = new Date(l.toMillis());
+                    BasicFileAttributes attr = null;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        attr = Files.readAttributes(Paths.get(x.abspath), BasicFileAttributes.class);
+                        FileTime c = attr.creationTime();
+                        FileTime l = attr.lastAccessTime();
+                        x.create = new Date(c.toMillis());
+                        x.last = new Date(l.toMillis());
+                    } else {
+                        File file = new File(x.abspath);
+                        long lastModified = file.lastModified();
+                        x.create = new Date(lastModified);
+                        x.last = new Date(lastModified);
+                    }
+
 
                 } catch (IOException ex) {
                     // handle exception
