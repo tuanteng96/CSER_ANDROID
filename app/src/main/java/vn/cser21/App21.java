@@ -264,8 +264,6 @@ public class App21 {
         MainActivity m = (MainActivity) mContext;
         m.setBackground(rs.params);
         App21Result(rs);
-
-
     }
 
     void SET_BADGE(final Result result) {

@@ -1,6 +1,7 @@
 package vn.cser21;
 
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -12,6 +13,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
+import android.graphics.Shader;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -26,8 +32,13 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.core.graphics.Insets;
 
 import android.view.MotionEvent;
 import android.view.Window;
@@ -68,7 +79,6 @@ import pub.devrel.easypermissions.EasyPermissions;
 import vn.cser21.incoming.CallNotEndEvent;
 import vn.cser21.incoming.IncomingCallActivity;
 import vn.cser21.incoming.IncomingEvent;
-
 
 /*
 Thay đổi cấu hình cho từng app
@@ -190,10 +200,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                         View v = w.getDecorView();
 
+                        WindowInsetsControllerCompat controller =
+                                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
 
                         if (textStatusBarWhite)
+                            //controller.setAppearanceLightStatusBars(true);
                             v.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
                         else
+                            //controller.setAppearanceLightStatusBars(false);
                             v.setSystemUiVisibility(0);
                     }
                 });
@@ -299,6 +313,29 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         });
     }
 
+    public static int dpToPx(int dp) {
+        return (int) (dp / Resources.getSystem().getDisplayMetrics().density);
+    }
+
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = dpToPx(getResources().getDimensionPixelSize(resourceId));
+        }
+        return result;
+    }
+
+    public int getNavigationBarHeight() {
+        Context context = this;
+        Resources resources = context.getResources();
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return dpToPx(resources.getDimensionPixelSize(resourceId));
+        }
+        return 0;
+    }
+
     private Bitmap getBitmapFromAsset(String strName) throws IOException {
         AssetManager assetManager = getAssets();
         InputStream istr = assetManager.open(strName);
@@ -328,34 +365,64 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         FirebaseApp.initializeApp(getApplicationContext());
         // Get Token Key
 
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(new OnCompleteListener<String>() {
-                    @Override
-                    public void onComplete(@NonNull Task<String> task) {
-                        if (!task.isSuccessful()) {
-                            Log.w(TAG, "Fetching FCM registration token failed", task.getException());
-                            return;
-                        }
 
-                        // Get new FCM registration token
-                        String token = task.getResult();
-                        String name = getPackageName();
-                        SharedPreferences sharedPref = getSharedPreferences(name, Context.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPref.edit();
-                        editor.putString("FirebaseNotiToken", token);
-                        editor.commit();
-                    }
-                });
+        View root = findViewById(R.id.layout);
+        root.post(() -> {
+            int w = root.getWidth();
+            int h = root.getHeight();
+
+            int solidHeight = (int) (h * 0.2f);   // 20% hồng đặc
+            int fadeHeight  = (int) (h * 0.2f);   // 20% fade
+            int whiteStart  = solidHeight + fadeHeight; // bắt đầu vùng trắng đặc
+
+            Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bmp);
+            Paint paint = new Paint();
+            paint.setStyle(Paint.Style.FILL);
+
+            paint.setColor(ContextCompat.getColor(this, R.color.colorApp));
+            canvas.drawRect(0, 0, w, solidHeight, paint);
+
+            LinearGradient gradient = new LinearGradient(
+                    0, solidHeight, 0, solidHeight + fadeHeight,
+                    ContextCompat.getColor(this, R.color.colorApp), Color.WHITE,
+                    Shader.TileMode.CLAMP
+            );
+            paint.setShader(gradient);
+            canvas.drawRect(0, solidHeight, w, solidHeight + fadeHeight, paint);
+            paint.setShader(null);
+
+            paint.setColor(Color.WHITE);
+            canvas.drawRect(0, whiteStart, w, h, paint);
+
+            root.setBackground(new BitmapDrawable(root.getResources(), bmp));
+        });
+
+        //WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+
+            int left   = sys.left;
+            int top    = sys.top;
+            int right  = sys.right;
+            int bottom = Math.max(sys.bottom, ime.bottom);
+
+            v.setPadding(left, top, right, bottom);
+
+            return insets; // chỉ apply padding
+        });
+
 
         //loadr
 
         //
         wv = (WebView) this.findViewById(R.id.wv);
         ANDROID = new ANDROID(this);
-        wv.setBackgroundColor(Color.TRANSPARENT);
 
-        //Luôn để mầu trắng
-        //setBackground(null);
+        wv.setBackgroundColor(Color.TRANSPARENT);
 
         wv.addJavascriptInterface(ANDROID, "ANDROID");
 
@@ -425,7 +492,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         Gson gson = new Gson();
 
         String jsonExtras = extras == null ? "{}" : gson.toJson(mapBundle(extras));
-        html = html.replace("<body>", "<body><script> var ANDROID_EXTRAS =" + jsonExtras + " </script>");
+
+        //html = html.replace("<body>", "<body><script> var ANDROID_EXTRAS =" + jsonExtras + "; document.documentElement.style.setProperty('--f7-safe-area-top', '" + getStatusBarHeight() + "px'); document.documentElement.style.setProperty('--f7-safe-area-bottom', '" + getNavigationBarHeight() + "px')</script>");
+        html = html.replace("<body>", "<body><script> var ANDROID_EXTRAS =" + jsonExtras + ";</script>");
 
         Log.d("jsonExtras", jsonExtras);
         //DEV Remove
