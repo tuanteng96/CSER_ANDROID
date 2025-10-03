@@ -55,6 +55,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void handleIntent(@NonNull Intent intent) {
+
         String type = intent.getStringExtra("type");
         if (type == null || type.isEmpty()) {
             sendNotification(intent);
@@ -124,7 +125,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         intent.putExtras(intentNoti.getExtras());
 
         PendingIntent pendingIntent = createPendingIntent(intent);
-        
+
         //PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "channel_id")

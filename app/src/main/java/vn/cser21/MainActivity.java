@@ -1,5 +1,6 @@
 package vn.cser21;
 
+import android.content.pm.PackageInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -43,11 +44,13 @@ import androidx.core.graphics.Insets;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.view.View;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
+import android.webkit.WebStorage;
 import android.webkit.WebViewClient;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -350,6 +353,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //go
         super.onCreate(savedInstanceState);
 
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        boolean isFirstRun = prefs.getBoolean("isFirstRun", true);
+
+
         if (!isTaskRoot() && (getIntent().hasCategory(Intent.CATEGORY_LAUNCHER) || getIntent().hasCategory(Intent.CATEGORY_INFO))
                 && Intent.ACTION_MAIN.equals(getIntent().getAction())) {
             finish();
@@ -421,6 +428,40 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //
         wv = (WebView) this.findViewById(R.id.wv);
         ANDROID = new ANDROID(this);
+
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            if (pInfo.firstInstallTime == pInfo.lastUpdateTime) {
+                // ✅ 1. Xoá toàn bộ WebStorage (LocalStorage, WebSQL…)
+                WebStorage.getInstance().deleteAllData();
+
+                // ✅ 2. Xoá cache, form, history của WebView
+                wv.clearCache(true);
+                wv.clearFormData();
+                wv.clearHistory();
+
+                // ✅ 3. Xoá cookie
+                CookieManager cookieManager = CookieManager.getInstance();
+                cookieManager.removeAllCookies(value -> {
+                    cookieManager.flush();
+                    Log.d("WebView", "Cookies đã xoá");
+                });
+
+                // ✅ 4. Xoá token Firebase cũ
+                FirebaseMessaging.getInstance().deleteToken()
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Log.d("FCM", "Đã xoá Firebase token cũ");
+                            } else {
+                                Log.w("FCM", "Xoá token thất bại", task.getException());
+                            }
+                        });
+            } else {
+                // 👉 Update, giữ nguyên dữ liệu
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
 
         wv.setBackgroundColor(Color.TRANSPARENT);
 
@@ -509,6 +550,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     public void getNotificationPermission(){
+
         try {
             if (Build.VERSION.SDK_INT > 32) {
                 ActivityCompat.requestPermissions(this,
@@ -523,6 +565,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+
         if (intent.getStringExtra("NOTI_ID") != null)
             if (!intent.getStringExtra("NOTI_ID").isEmpty()) {
                 Intent start = intent;
