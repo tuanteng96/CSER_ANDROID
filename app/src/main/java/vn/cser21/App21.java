@@ -1078,40 +1078,93 @@ public class App21 {
     //hungnt
     void KEY(final Result result) {
         final App21 t = this;
+
         if (result.params != null && !result.params.isEmpty()) {
-            //get
             String name = mContext.getPackageName();
             SharedPreferences sharedPref = mContext.getSharedPreferences(name, Context.MODE_PRIVATE);
+
             try {
                 JSONObject jObject = new JSONObject(result.params);
+                String key = jObject.optString("key", null);
+                String value = jObject.optString("value", null);
 
-                String  key = jObject.has("key") ? jObject.getString("key") : null;
-                String  value = jObject.has("value") ? jObject.getString("value") : null ;
-                if(key!=null && !key.isEmpty())
-                {
-                    if(value!=null)
-                    {
+                if (key != null && !key.isEmpty()) {
+                    SharedPreferences.Editor editor = sharedPref.edit();
 
-                        SharedPreferences.Editor editor = sharedPref.edit();
+                    if (value != null && !value.isEmpty()) {
+                        // Ghi
                         editor.putString(key, value);
                         editor.commit();
                         result.data = value;
-                    }else{
+                    } else {
+                        // Đọc
                         result.data = sharedPref.getString(key, null);
+
+                        // Nếu đang đọc Firebase token mà không có -> thử lấy mới
+                        if (result.data == null && key.equals("FirebaseNotiToken")) {
+                            FirebaseMessaging.getInstance().getToken()
+                                    .addOnCompleteListener(task -> {
+                                        if (task.isSuccessful()) {
+                                            String newToken = task.getResult();
+                                            sharedPref.edit().putString("FirebaseNotiToken", newToken).apply();
+                                            result.data = newToken;
+                                            result.success = true;
+                                            App21Result(result);
+                                        } else {
+                                            result.error = "Không lấy được token";
+                                            App21Result(result);
+                                        }
+                                    });
+                            return; // dừng vì hàm async
+                        }
                     }
+
                     result.success = true;
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
-                result.error =  e.getMessage();
+                result.error = e.getMessage();
             }
-
-
         }
-
 
         App21Result(result);
     }
+
+//    void KEY(final Result result) {
+//        final App21 t = this;
+//        if (result.params != null && !result.params.isEmpty()) {
+//            //get
+//            String name = mContext.getPackageName();
+//            SharedPreferences sharedPref = mContext.getSharedPreferences(name, Context.MODE_PRIVATE);
+//            try {
+//                JSONObject jObject = new JSONObject(result.params);
+//
+//                String  key = jObject.has("key") ? jObject.getString("key") : null;
+//                String  value = jObject.has("value") ? jObject.getString("value") : null ;
+//                if(key!=null && !key.isEmpty())
+//                {
+//                    if(value!=null)
+//                    {
+//
+//                        SharedPreferences.Editor editor = sharedPref.edit();
+//                        editor.putString(key, value);
+//                        editor.commit();
+//                        result.data = value;
+//                    }else{
+//                        result.data = sharedPref.getString(key, null);
+//                    }
+//                    result.success = true;
+//                }
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//                result.error =  e.getMessage();
+//            }
+//
+//
+//        }
+//
+//
+//        App21Result(result);
+//    }
 
     public boolean onActivityResult(int requestCode, int resultCode, Intent intent, Activity activity) {
         // Activity act = activity.getCallingActivity().;
@@ -1127,29 +1180,30 @@ public class App21 {
 
     //Lấy token thủ công
     void GET_NOTI_TOKEN(final Result result) {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        Log.w("FCM", "Fetching FCM registration token failed", task.getException());
-                        result.success = false;
-                        result.data = "Lấy token thất bại: " + task.getException();
-                        App21Result(result);
-                        return;
-                    }
-
-                    // Lấy token thành công
-                    String token = task.getResult();
-                    Log.d("FCM", "Current token: " + token);
-
-                    // Lưu vào SharedPreferences
-                    String name = mContext.getPackageName();
-                    SharedPreferences sharedPref = mContext.getSharedPreferences(name, Context.MODE_PRIVATE);
-                    sharedPref.edit().putString("FirebaseNotiToken", token).apply();
-
-                    result.success = true;
-                    result.data = token;
-                    App21Result(result);
-                });
+        App21Result(result);
+//        FirebaseMessaging.getInstance().getToken()
+//                .addOnCompleteListener(task -> {
+//                    if (!task.isSuccessful()) {
+//                        Log.w("FCM", "Fetching FCM registration token failed", task.getException());
+//                        result.success = false;
+//                        result.data = "Lấy token thất bại: " + task.getException();
+//                        App21Result(result);
+//                        return;
+//                    }
+//
+//                    // Lấy token thành công
+//                    String token = task.getResult();
+//                    Log.d("FCM", "Current token: " + token);
+//
+//                    // Lưu vào SharedPreferences
+//                    String name = mContext.getPackageName();
+//                    SharedPreferences sharedPref = mContext.getSharedPreferences(name, Context.MODE_PRIVATE);
+//                    sharedPref.edit().putString("FirebaseNotiToken", token).apply();
+//
+//                    result.success = true;
+//                    result.data = token;
+//                    App21Result(result);
+//                });
     }
 }
 

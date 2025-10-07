@@ -1,5 +1,6 @@
 package vn.cser21;
 
+import android.app.AlertDialog;
 import android.content.pm.PackageInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
@@ -41,6 +42,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.graphics.Insets;
 
+import android.provider.Settings;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
@@ -105,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //Upload Var
     private float m_downX;
     private static final int STORAGE_PERMISSION_CODE = 123;
+
+    private static final int REQUEST_NOTI_PERMISSION = 202;
     private final static int FILECHOOSER_RESULTCODE = 1;
     private ValueCallback<Uri[]> mUploadMessage;
 
@@ -346,6 +350,20 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         return bitmap;
     }
 
+    private long getSafeVersionCode(Context context) {
+        try {
+            PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                return pInfo.getLongVersionCode(); // gồm versionCodeMajor
+            } else {
+                return pInfo.versionCode;
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
     @SuppressLint({"ClickableViewAccessibility", "WrongViewCast"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -354,8 +372,35 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         super.onCreate(savedInstanceState);
 
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        boolean isFirstRun = prefs.getBoolean("isFirstRun", true);
 
+        long savedVersionCode = prefs.getLong("lastVersionCode", -1);
+        long currentVersionCode = getSafeVersionCode(this);
+
+        PackageInfo pInfo = null;
+        try {
+            pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        long firstInstallTime = (pInfo != null) ? pInfo.firstInstallTime : 0;
+        long lastUpdateTime = (pInfo != null) ? pInfo.lastUpdateTime : 0;
+
+        // Xác định trạng thái
+        boolean isNewInstall = false;
+        boolean isUpdate = false;
+
+        if (savedVersionCode == -1) {
+            if (firstInstallTime == lastUpdateTime) {
+                // App vừa được cài mới
+                isNewInstall = true;
+            } else {
+                // App cập nhật từ bản cũ chưa từng lưu versionCode
+                isUpdate = true;
+            }
+        } else if (currentVersionCode > savedVersionCode) {
+            isUpdate = true;
+        }
 
         if (!isTaskRoot() && (getIntent().hasCategory(Intent.CATEGORY_LAUNCHER) || getIntent().hasCategory(Intent.CATEGORY_INFO))
                 && Intent.ACTION_MAIN.equals(getIntent().getAction())) {
@@ -429,39 +474,32 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         wv = (WebView) this.findViewById(R.id.wv);
         ANDROID = new ANDROID(this);
 
-        try {
-            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-            if (pInfo.firstInstallTime == pInfo.lastUpdateTime) {
-                // ✅ 1. Xoá toàn bộ WebStorage (LocalStorage, WebSQL…)
-                WebStorage.getInstance().deleteAllData();
+        // 👉 Chỉ xoá dữ liệu nếu thực sự là cài mới (không phải update)
+        if (isNewInstall) {
+            WebStorage.getInstance().deleteAllData();
+            wv.clearCache(true);
+            wv.clearFormData();
+            wv.clearHistory();
 
-                // ✅ 2. Xoá cache, form, history của WebView
-                wv.clearCache(true);
-                wv.clearFormData();
-                wv.clearHistory();
+            FirebaseMessaging.getInstance().deleteToken()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d("FCM", "Đã xoá Firebase token cũ");
+                        } else {
+                            Log.w("FCM", "Xoá token thất bại", task.getException());
+                        }
+                    });
 
-                // ✅ 3. Xoá cookie
-                CookieManager cookieManager = CookieManager.getInstance();
-                cookieManager.removeAllCookies(value -> {
-                    cookieManager.flush();
-                    Log.d("WebView", "Cookies đã xoá");
-                });
+            Log.d("Init", "Lần đầu cài mới → xoá WebView data");
 
-                // ✅ 4. Xoá token Firebase cũ
-                FirebaseMessaging.getInstance().deleteToken()
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                Log.d("FCM", "Đã xoá Firebase token cũ");
-                            } else {
-                                Log.w("FCM", "Xoá token thất bại", task.getException());
-                            }
-                        });
-            } else {
-                // 👉 Update, giữ nguyên dữ liệu
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+        } else if (isUpdate) {
+            Log.d("Init", "Cập nhật từ bản cũ → giữ nguyên LocalStorage");
+        } else {
+            Log.d("Init", "Chạy lại app bình thường → giữ nguyên dữ liệu");
         }
+
+        // ✅ Lưu versionCode mới vào SharedPreferences (dùng long)
+        prefs.edit().putLong("lastVersionCode", currentVersionCode).apply();
 
         wv.setBackgroundColor(Color.TRANSPARENT);
 
@@ -514,7 +552,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             wv.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
-
         //Mỗi một app có 1 domain riêng
         String domain = getString(R.string.app_domain);
         @SuppressLint("ResourceType")
@@ -546,21 +583,60 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         //wv.loadUrl("https://ezs.vn/");
         //DEV Open
 
-        getNotificationPermission();
+        checkAndRequestNotificationPermission();
     }
 
-    public void getNotificationPermission(){
+    private void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS);
 
-        try {
-            if (Build.VERSION.SDK_INT > 32) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                        202);
+            if (permission != PackageManager.PERMISSION_GRANTED) {
+                // Nếu từng bị từ chối → hiển thị dialog hướng dẫn bật thủ công
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
+                    showNotificationSettingsDialog();
+                } else {
+                    // Chưa từng xin → xin quyền
+                    ActivityCompat.requestPermissions(
+                            this,
+                            new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                            REQUEST_NOTI_PERMISSION
+                    );
+                }
+            } else {
+                Log.d("NotificationPermission", "✅ Đã có quyền POST_NOTIFICATIONS");
             }
-        }catch (Exception e){
-
+        } else {
+            Log.d("NotificationPermission", "Không cần xin quyền (Android < 13)");
         }
     }
+
+    /**
+     * Hiển thị dialog mở Cài đặt khi quyền đã bị từ chối
+     */
+    private void showNotificationSettingsDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Bật thông báo")
+                .setMessage("Ứng dụng cần quyền gửi thông báo để hiển thị tin nhắn, cuộc gọi đến, v.v. Bạn có muốn mở phần Cài đặt để bật lại không?")
+                .setPositiveButton("Mở cài đặt", (dialog, which) -> openNotificationSettings())
+                .setNegativeButton("Để sau", null)
+                .show();
+    }
+
+    /**
+     * Mở phần cài đặt thông báo của ứng dụng trong hệ thống
+     */
+    private void openNotificationSettings() {
+        Intent intent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+        } else {
+            intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.parse("package:" + getPackageName()));
+        }
+        startActivity(intent);
+    }
+
 
     @Override
     protected void onNewIntent(Intent intent) {

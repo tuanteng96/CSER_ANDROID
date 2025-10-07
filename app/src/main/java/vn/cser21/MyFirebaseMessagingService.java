@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -161,6 +162,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // muốn tạo nhiều notif thì phải cho thằng notification manager noti đến nhiều channel,
         // không được trùng nhau
         // vì vậy hàm new Random().nextInt() >> để tạo ra 1 channel ngẫu nhiên
+
+        // ✅ Kiểm tra quyền trước khi hiển thị thông báo
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.w("Notification", "App chưa có quyền POST_NOTIFICATIONS, bỏ qua notify().");
+                return;
+            }
+        }
+
         notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
         Log.e("On Click", "On Click");
     }
@@ -298,6 +309,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // muốn tạo nhiều notif thì phải cho thằng notification manager noti đến nhiều channel,
         // không được trùng nhau
         // vì vậy hàm new Random().nextInt() >> để tạo ra 1 channel ngẫu nhiên
+
+        // ✅ Kiểm tra quyền trước khi hiển thị thông báo
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.w("Notification", "App chưa có quyền POST_NOTIFICATIONS, bỏ qua notify().");
+                return;
+            }
+        }
+
         notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
         Log.e("On Click", "On Click");
     }
