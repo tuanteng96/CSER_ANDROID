@@ -51,7 +51,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         super.onMessageReceived(remoteMessage);
         // TODO(developer): Handle FCM messages here.
         Map<String, String> data = remoteMessage.getData();
-        Log.d("onMessageReceived", "data " + data);
+        Log.e("onMessageReceived", "data " + data);
     }
 
     @Override
@@ -327,7 +327,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     //hungnt
     @Override
     public void onNewToken(String token) {
-        Log.d("firebase token", "Refreshed token: " + token);
+        Log.e("🔥 FCM TOKEN", "Refreshed token: " + token);
 
         String name = this.getPackageName();
         SharedPreferences sharedPref = this.getSharedPreferences(name, Context.MODE_PRIVATE);

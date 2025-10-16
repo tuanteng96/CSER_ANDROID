@@ -415,7 +415,22 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         setContentView(R.layout.activity_main);
         FirebaseApp.initializeApp(getApplicationContext());
-        // Get Token Key
+
+//        FirebaseMessaging.getInstance().getToken()
+//                .addOnCompleteListener(task -> {
+//                    if (!task.isSuccessful()) {
+//                        Log.w("🔥 FCM TOKEN", "Fetching FCM registration token failed", task.getException());
+//                        return;
+//                    }
+//
+//                    // Lấy token hiện tại
+//                    String token = task.getResult();
+//                    Log.e("🔥 FCM TOKEN", "Current token: " + token);
+//
+//                    // Lưu lại để bạn dùng cho send test
+//                    SharedPreferences prefsNow = getSharedPreferences(getPackageName(), MODE_PRIVATE);
+//                    prefsNow.edit().putString("FirebaseNotiToken", token).apply();
+//                });
 
 
         View root = findViewById(R.id.layout);
@@ -481,14 +496,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             wv.clearFormData();
             wv.clearHistory();
 
-            FirebaseMessaging.getInstance().deleteToken()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Log.d("FCM", "Đã xoá Firebase token cũ");
-                        } else {
-                            Log.w("FCM", "Xoá token thất bại", task.getException());
-                        }
-                    });
+//            FirebaseMessaging.getInstance().deleteToken()
+//                    .addOnCompleteListener(task -> {
+//                        if (task.isSuccessful()) {
+//                            Log.d("FCM", "Đã xoá Firebase token cũ");
+//                        } else {
+//                            Log.w("FCM", "Xoá token thất bại", task.getException());
+//                        }
+//                    });
 
             Log.d("Init", "Lần đầu cài mới → xoá WebView data");
 
@@ -504,7 +519,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         wv.setBackgroundColor(Color.TRANSPARENT);
 
         wv.addJavascriptInterface(ANDROID, "ANDROID");
-
 
         WebSettings setting = wv.getSettings();
         //enble all
