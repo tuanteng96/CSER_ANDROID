@@ -118,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private ValueCallback<Uri[]> mUMA;
     private final static int FCR = 1;
     private Result resultQrCode;
+    private boolean suppressLifecycleJs = false;
 
     // End Upload Var
 
@@ -130,6 +131,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     public Activity getActivity() {
         return this;
+    }
+
+    public void setSuppressLifecycleJs(boolean suppressLifecycleJs) {
+        this.suppressLifecycleJs = suppressLifecycleJs;
     }
 
     @Override
@@ -250,25 +255,26 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
         if (Build.VERSION.SDK_INT >= 21) {
+            if (requestCode != FCR) {
+                return;
+            }
             Uri[] results = null;
             //Check if response is positive
             if (resultCode == Activity.RESULT_OK) {
-                if (requestCode == FCR) {
-                    if (null == mUMA) {
-                        return;
+                if (intent == null) {
+                    //Capture Photo if no image available
+                    if (mCM != null) {
+                        results = new Uri[]{Uri.parse(mCM)};
                     }
-                    if (intent == null) {
-                        //Capture Photo if no image available
-                        if (mCM != null) {
-                            results = new Uri[]{Uri.parse(mCM)};
-                        }
-                    } else {
-                        String dataString = intent.getDataString();
-                        if (dataString != null) {
-                            results = new Uri[]{Uri.parse(dataString)};
-                        }
+                } else {
+                    String dataString = intent.getDataString();
+                    if (dataString != null) {
+                        results = new Uri[]{Uri.parse(dataString)};
                     }
                 }
+            }
+            if (mUMA == null) {
+                return;
             }
             mUMA.onReceiveValue(results);
             mUMA = null;
@@ -321,14 +327,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     public static int dpToPx(int dp) {
-        return (int) (dp / Resources.getSystem().getDisplayMetrics().density);
+        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
     }
 
     public int getStatusBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
-            result = dpToPx(getResources().getDimensionPixelSize(resourceId));
+            result = getResources().getDimensionPixelSize(resourceId);
         }
         return result;
     }
@@ -338,7 +344,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         Resources resources = context.getResources();
         int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
         if (resourceId > 0) {
-            return dpToPx(resources.getDimensionPixelSize(resourceId));
+            return resources.getDimensionPixelSize(resourceId);
         }
         return 0;
     }
@@ -465,21 +471,21 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             root.setBackground(new BitmapDrawable(root.getResources(), bmp));
         });
 
-        //WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
 
-            int left   = sys.left;
-            int top    = sys.top;
-            int right  = sys.right;
+            int left = sys.left;
+            int right = sys.right;
+            int top = sys.top;
             int bottom = Math.max(sys.bottom, ime.bottom);
 
             v.setPadding(left, top, right, bottom);
 
-            return insets; // chỉ apply padding
+            return insets;
         });
 
 
@@ -668,12 +674,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     protected void onResume() {
         super.onResume();
+        if (suppressLifecycleJs) {
+            return;
+        }
         evalJs("AppResume()");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        if (suppressLifecycleJs) {
+            return;
+        }
         evalJs("AppPause()");
     }
 

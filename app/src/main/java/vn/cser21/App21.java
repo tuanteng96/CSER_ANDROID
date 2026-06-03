@@ -27,7 +27,6 @@ import org.json.JSONObject;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.content.FileProvider;
-import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
 import android.util.Log;
@@ -780,30 +779,70 @@ public class App21 {
     }
 
     void SEND_SMS(final Result result) {
-        final String SEND_SMS = Manifest.permission.SEND_SMS;
-        _PERMISSION(result, SEND_SMS, new Runnable() {
+        final SMS sms = parseSMSParams(result.params);
+        if (sms == null) {
+            Result rs = result.copy();
+            rs.success = false;
+            rs.error = "INVALID_PARAMS";
+            App21Result(rs);
+            return;
+        }
+
+        final MainActivity m = (MainActivity) mContext;
+        m.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-
                 try {
+                    Intent cInt = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + Uri.encode(sms.getPhone())));
+                    cInt.putExtra("sms_body", sms.getBody());
 
-                    SMS sms = new Gson().fromJson(result.params, SMS.class);
+                    if (cInt.resolveActivity(m.getPackageManager()) == null) {
+                        Result rs = result.copy();
+                        rs.success = false;
+                        rs.error = "CANNOT_SEND_SMS";
+                        App21Result(rs);
+                        return;
+                    }
 
-                    SmsManager.getDefault().sendTextMessage(sms.number, null, sms.smsText, null, null);
+                    IsMe = true;
+                    m.startActivityForResult(cInt, activityResultIDManager.put(new ActivityResultID() {
+                        @Override
+                        public void run() {
+                            Result rs = result.copy();
+                            if (this.resultCode == Activity.RESULT_OK) {
+                                rs.success = true;
+                            } else {
+                                rs.success = false;
+                                rs.error = "SMS_CANCELLED";
+                            }
+                            App21Result(rs);
+                        }
+                    }));
+                } catch (ActivityNotFoundException ex) {
                     Result rs = result.copy();
-                    rs.success = true;
-
+                    rs.success = false;
+                    rs.error = "CANNOT_SEND_SMS";
                     App21Result(rs);
-                    ;
                 } catch (Exception ex) {
                     Result rs = result.copy();
                     rs.success = false;
                     rs.error = ex.getMessage();
                     App21Result(rs);
                 }
-
             }
         });
+    }
+
+    SMS parseSMSParams(String params) {
+        try {
+            SMS sms = new Gson().fromJson(params, SMS.class);
+            if (sms == null) return null;
+            if (sms.getPhone() == null || sms.getPhone().trim().isEmpty()) return null;
+            if (sms.getBody() == null) sms.smsText = "";
+            return sms;
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     void ALARM_NOTI(final Result result) {
@@ -1263,7 +1302,22 @@ class ActivityResultIDManager {
 
 class SMS {
     public String number;
+    public String phone;
     public String smsText;
+    public String body;
+    public String text;
+    public String callback;
+
+    public String getPhone() {
+        if (phone != null && !phone.trim().isEmpty()) return phone;
+        return number;
+    }
+
+    public String getBody() {
+        if (body != null) return body;
+        if (text != null) return text;
+        return smsText;
+    }
 }
 
 class Base64Require {
