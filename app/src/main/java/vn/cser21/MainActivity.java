@@ -480,8 +480,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
             int left = sys.left;
             int right = sys.right;
-            int top = sys.top;
-            int bottom = Math.max(sys.bottom, ime.bottom);
+            int top = 0;
+            int bottom = insets.isVisible(WindowInsetsCompat.Type.ime()) ? ime.bottom : 0;
 
             v.setPadding(left, top, right, bottom);
 
