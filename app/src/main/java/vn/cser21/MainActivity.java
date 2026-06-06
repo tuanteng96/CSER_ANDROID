@@ -34,13 +34,12 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.core.graphics.Insets;
 
 import android.provider.Settings;
 import android.view.MotionEvent;
@@ -209,18 +208,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         w.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
                         w.setStatusBarColor(color);
-
-                        View v = w.getDecorView();
-
-                        WindowInsetsControllerCompat controller =
-                                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
-
-                        if (textStatusBarWhite)
-                            //controller.setAppearanceLightStatusBars(true);
-                            v.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-                        else
-                            //controller.setAppearanceLightStatusBars(false);
-                            v.setSystemUiVisibility(0);
+                        w.setNavigationBarColor(Color.TRANSPARENT);
+                        applyEdgeToEdgeSystemUi(textStatusBarWhite);
                     }
                 });
             }
@@ -349,6 +338,19 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         return 0;
     }
 
+    private void applyEdgeToEdgeSystemUi(boolean lightStatusBar) {
+        View decorView = getWindow().getDecorView();
+        int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+
+        if (lightStatusBar && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+        }
+
+        decorView.setSystemUiVisibility(flags);
+    }
+
     private Bitmap getBitmapFromAsset(String strName) throws IOException {
         AssetManager assetManager = getAssets();
         InputStream istr = assetManager.open(strName);
@@ -472,27 +474,28 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         });
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-
-
-        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-
-            int left = sys.left;
-            int right = sys.right;
-            int top = 0;
-            int bottom = insets.isVisible(WindowInsetsCompat.Type.ime()) ? ime.bottom : 0;
-
-            v.setPadding(left, top, right, bottom);
-
-            return insets;
-        });
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        applyEdgeToEdgeSystemUi(true);
 
 
         //loadr
 
         //
+        View webViewContainer = findViewById(R.id.webview_container);
+        ViewCompat.setOnApplyWindowInsetsListener(webViewContainer, (v, insets) -> {
+            Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            int bottom = insets.isVisible(WindowInsetsCompat.Type.ime())
+                    ? Math.max(sys.bottom, ime.bottom)
+                    : sys.bottom;
+
+            v.setPadding(sys.left, sys.top, sys.right, bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(webViewContainer);
+
         wv = (WebView) this.findViewById(R.id.wv);
+        wv.setPadding(0, 0, 0, 0);
         ANDROID = new ANDROID(this);
 
         // 👉 Chỉ xoá dữ liệu nếu thực sự là cài mới (không phải update)
@@ -591,8 +594,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         String jsonExtras = extras == null ? "{}" : gson.toJson(mapBundle(extras));
 
-        //html = html.replace("<body>", "<body><script> var ANDROID_EXTRAS =" + jsonExtras + "; document.documentElement.style.setProperty('--f7-safe-area-top', '" + getStatusBarHeight() + "px'); document.documentElement.style.setProperty('--f7-safe-area-bottom', '" + getNavigationBarHeight() + "px')</script>");
-        html = html.replace("<body>", "<body><script> var ANDROID_EXTRAS =" + jsonExtras + ";</script>");
+        html = html.replace("<body>", "<body><script> var ANDROID_EXTRAS =" + jsonExtras + "; window.ANDROID_SAFE_AREA = { top: " + getStatusBarHeight() + ", bottom: " + getNavigationBarHeight() + " }; document.documentElement.style.setProperty('--f7-safe-area-top', window.ANDROID_SAFE_AREA.top + 'px'); document.documentElement.style.setProperty('--f7-safe-area-bottom', window.ANDROID_SAFE_AREA.bottom + 'px'); document.documentElement.style.setProperty('--android-safe-area-top', window.ANDROID_SAFE_AREA.top + 'px'); document.documentElement.style.setProperty('--android-safe-area-bottom', window.ANDROID_SAFE_AREA.bottom + 'px');</script>");
 
         Log.d("jsonExtras", jsonExtras);
         //DEV Remove
