@@ -93,7 +93,7 @@ public class SERVER_NOTI {
         String largeIconUrl = data.containsKey("largeIcon") ? data.get("largeIcon") : null;
         if (largeIconUrl != null && !"".equals(largeIconUrl) && !"ic_launcher".equals(largeIconUrl)) {
             largeIconUrl = DownloadFilesTask.tryDecodeUrl(largeIconUrl);
-            Bitmap b = MyFirebaseMessagingService.getImageUrl(largeIconUrl);
+            Bitmap b = MyFirebaseMessagingService.getImageUrl(context, largeIconUrl);
             if (b != null) notificationBuilder.setLargeIcon(b);
         }
 
@@ -144,19 +144,15 @@ public class SERVER_NOTI {
             _sound = Uri.parse(sound);
         }
 
-
-        try {
-            String picture_url = data.get("picture_url");
-            if (picture_url != null && !"".equals(picture_url)) {
-                picture_url = DownloadFilesTask.tryDecodeUrl(picture_url);
-                URL url = new URL(picture_url);
-                Bitmap bigPicture = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+        String pictureUrl = data.get("picture_url");
+        if (pictureUrl != null && !"".equals(pictureUrl)) {
+            pictureUrl = DownloadFilesTask.tryDecodeUrl(pictureUrl);
+            Bitmap bigPicture = NotificationImageLoader.loadBigPicture(context, pictureUrl);
+            if (bigPicture != null) {
                 notificationBuilder.setStyle(
                         new NotificationCompat.BigPictureStyle().bigPicture(bigPicture).setSummaryText(content)
                 );
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

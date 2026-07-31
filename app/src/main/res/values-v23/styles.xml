@@ -9,8 +9,6 @@
         <item name="colorPrimaryDark">@color/colorPrimary</item>
         <item name="colorAccent">@color/colorPrimary</item>
 
-        <item name="android:statusBarColor">?android:colorBackground</item>
-        <item name="android:statusBarColor" tools:ignore="DuplicateDefinition">@color/bg</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
@@ -20,8 +18,5 @@
         <item name="android:windowBackground">@null</item>
         <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
         <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
-        <item name="android:statusBarColor">?android:colorBackground</item>
-
-
     </style>
 </resources>

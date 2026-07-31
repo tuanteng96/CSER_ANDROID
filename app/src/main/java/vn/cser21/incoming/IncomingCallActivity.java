@@ -1,11 +1,18 @@
 package vn.cser21.incoming;
 
 import androidx.annotation.RequiresApi;
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.TaskStackBuilder;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -56,8 +63,29 @@ public class IncomingCallActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(
+                this,
+                SystemBarStyle.dark(Color.TRANSPARENT),
+                SystemBarStyle.dark(Color.TRANSPARENT)
+        );
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_incoming_call);
+
+        View root = findViewById(R.id.incoming_call_root);
+        View actions = findViewById(R.id.clAction);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            actions.setPadding(0, 0, 0, systemBars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(root);
+        if (WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()) != null) {
+            WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
+                    .setAppearanceLightStatusBars(false);
+            WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
+                    .setAppearanceLightNavigationBars(false);
+        }
 
         if (getIntent().getExtras().getBoolean("IS_MAIN", false) == true) {
             mediaPlayer = MediaPlayer.create(this, R.raw.call);

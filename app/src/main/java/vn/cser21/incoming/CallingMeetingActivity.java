@@ -1,10 +1,17 @@
 package vn.cser21.incoming;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -36,8 +43,30 @@ public class CallingMeetingActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(
+                this,
+                SystemBarStyle.dark(Color.TRANSPARENT),
+                SystemBarStyle.dark(Color.TRANSPARENT)
+        );
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calling_meeting);
+
+        View root = findViewById(R.id.calling_meeting_root);
+        View actions = findViewById(R.id.clAction);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            actions.setPadding(0, 0, 0, systemBars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(root);
+        if (WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()) != null) {
+            WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
+                    .setAppearanceLightStatusBars(false);
+            WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
+                    .setAppearanceLightNavigationBars(false);
+        }
+
         time = findViewById(R.id.tvTime);
         stopService(new Intent(this, IncomingCallNotificationService.class));
 

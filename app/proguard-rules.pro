@@ -19,3 +19,24 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep JavaScript bridge methods used by WebView.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Keep EventBus subscriber methods discovered via reflection.
+-keepclassmembers class ** {
+    @org.greenrobot.eventbus.Subscribe <methods>;
+}
+
+# Keep Firebase messaging services declared in the manifest.
+-keep class * extends com.google.firebase.messaging.FirebaseMessagingService
+
+# Preserve field names for app models parsed by Gson.
+-keepclassmembers class vn.cser21.** {
+    <fields>;
+}
+
+# Preserve generic signatures used by reflection-based libraries.
+-keepattributes Signature,*Annotation*

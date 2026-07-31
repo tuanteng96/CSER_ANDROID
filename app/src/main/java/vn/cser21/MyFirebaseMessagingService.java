@@ -26,8 +26,6 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -91,13 +89,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     }
 
-    public static Bitmap getImageUrl(String _url) {
-        try {
-            URL url = new URL(_url);
-            return BitmapFactory.decodeStream(url.openConnection().getInputStream());
-        } catch (Exception e) {
-            return null;
-        }
+    public static Bitmap getImageUrl(Context context, String url) {
+        return NotificationImageLoader.loadLargeIcon(context, url);
     }
 
     private PendingIntent createPendingIntent(Intent intent) {
@@ -225,7 +218,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         //2
         String largeIconUrl = data.containsKey("largeIcon") ? data.get("largeIcon") : null;
         if (largeIconUrl != null && !"".equals(largeIconUrl) && !"ic_launcher".equals(largeIconUrl)) {
-            Bitmap b = getImageUrl(largeIconUrl);
+            Bitmap b = getImageUrl(this, largeIconUrl);
             if (b != null) notificationBuilder.setLargeIcon(b);
         }
 
@@ -277,17 +270,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
 
 
-        try {
-            String picture_url = data.get("picture_url");
-            if (picture_url != null && !"".equals(picture_url)) {
-                URL url = new URL(picture_url);
-                Bitmap bigPicture = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+        String pictureUrl = data.get("picture_url");
+        if (pictureUrl != null && !"".equals(pictureUrl)) {
+            Bitmap bigPicture = NotificationImageLoader.loadBigPicture(this, pictureUrl);
+            if (bigPicture != null) {
                 notificationBuilder.setStyle(
                         new NotificationCompat.BigPictureStyle().bigPicture(bigPicture).setSummaryText(content)
                 );
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);

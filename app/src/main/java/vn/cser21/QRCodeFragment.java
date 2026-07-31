@@ -25,6 +25,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -79,13 +81,18 @@ public class QRCodeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        root.findViewById(R.id.ivClose).setOnClickListener(new View.OnClickListener() {
+        View closeButton = root.findViewById(R.id.ivClose);
+        View flashButton = root.findViewById(R.id.ivFlash);
+
+        applyStatusBarSpacing(closeButton, flashButton);
+
+        closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 closeScanner();
             }
         });
-        root.findViewById(R.id.ivFlash).setOnClickListener(new View.OnClickListener() {
+        flashButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 flashOnButton();
@@ -94,6 +101,38 @@ public class QRCodeFragment extends Fragment {
         qrContainer = root.findViewById(R.id.qrContainer);
         surfaceView = root.findViewById(R.id.sfvCamera);
         methodRequiresPermission();
+    }
+
+    private void applyStatusBarSpacing(@NonNull View closeButton, @NonNull View flashButton) {
+        final int baseTopMarginPx = dpToPx(20);
+
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            updateTopMargin(closeButton, baseTopMarginPx + topInset);
+            updateTopMargin(flashButton, baseTopMarginPx + topInset);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(root);
+    }
+
+    private void updateTopMargin(@NonNull View view, int topMargin) {
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        if (!(layoutParams instanceof ViewGroup.MarginLayoutParams)) {
+            return;
+        }
+
+        ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) layoutParams;
+        if (marginLayoutParams.topMargin == topMargin) {
+            return;
+        }
+
+        marginLayoutParams.topMargin = topMargin;
+        view.setLayoutParams(marginLayoutParams);
+    }
+
+    private int dpToPx(int dp) {
+        float density = requireContext().getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 
     private void methodRequiresPermission() {

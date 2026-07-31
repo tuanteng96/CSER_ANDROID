@@ -60,7 +60,6 @@
         <activity
             android:name=".incoming.CallingMeetingActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
@@ -68,7 +67,6 @@
         <activity
             android:name=".incoming.IncomingCallActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
@@ -77,7 +75,6 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -85,6 +82,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            tools:remove="android:screenOrientation" />
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
