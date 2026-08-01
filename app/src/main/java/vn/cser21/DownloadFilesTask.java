@@ -6,9 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+
+import com.bumptech.glide.Glide;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import vn.cser21.App21;
 
@@ -113,13 +115,6 @@ public class DownloadFilesTask extends AsyncTask<String, String, String> {
                // if (localPath != null && !"".equals(localPath)) break;
                 ;
 
-                // 1. Declare a URL Connection
-                URL url = new URL(address);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                // 2. Open InputStream to connection
-                conn.connect();
-                in = conn.getInputStream();
-
                 String nohash = address.split("\\#")[0];
 
                 String[] segs = nohash.split("\\?")[0].split("/");
@@ -135,8 +130,26 @@ public class DownloadFilesTask extends AsyncTask<String, String, String> {
 
                 // 3. Download and decode the bitmap using BitmapFactory
                 File file = new File(directory, fname);
+                if (isImageAddress(address)) {
+                    File downloadedFile = Glide.with(app21.mContext.getApplicationContext())
+                            .asFile()
+                            .load(address)
+                            .submit()
+                            .get();
+                    copyFile(downloadedFile, file);
+                    localPath = file.getAbsolutePath();
+                    continue;
+                }
+
+                // 1. Declare a URL Connection
+                URL url = new URL(address);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                // 2. Open InputStream to connection
+                conn.connect();
+                in = conn.getInputStream();
+
                 try (OutputStream output = new FileOutputStream(file)) {
-                    byte[] buffer = new byte[4 * 1024]; // or other buffer size
+                    byte[] buffer = new byte[4 * 1024];
                     int read;
 
                     while ((read = in.read(buffer)) != -1) {
@@ -145,11 +158,14 @@ public class DownloadFilesTask extends AsyncTask<String, String, String> {
 
                     output.flush();
                     localPath = file.getAbsolutePath();
-                    //setCache(address, localPath);
                 }
 
 
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -178,7 +194,18 @@ public class DownloadFilesTask extends AsyncTask<String, String, String> {
 
     public Bitmap getBitmap(String path) {
         File f = getFile(path);
-        return BitmapFactory.decodeFile(f.getAbsolutePath());
+        try {
+            return Glide.with(app21.mContext.getApplicationContext())
+                    .asBitmap()
+                    .load(f)
+                    .submit()
+                    .get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (ExecutionException e) {
+            return null;
+        }
     }
 
     public String getExt(String path) {
@@ -227,6 +254,31 @@ public class DownloadFilesTask extends AsyncTask<String, String, String> {
             //return  Base64.getUrlEncoder().encodeToString(data);
         }catch (Exception ex){
             return "";
+        }
+    }
+
+    private boolean isImageAddress(String address) {
+        String ext = getExt(address);
+        return "png".equals(ext)
+                || "jpg".equals(ext)
+                || "jpeg".equals(ext)
+                || "webp".equals(ext)
+                || "gif".equals(ext)
+                || "bmp".equals(ext)
+                || "heic".equals(ext)
+                || "heif".equals(ext)
+                || "avif".equals(ext);
+    }
+
+    private void copyFile(File source, File target) throws IOException {
+        try (InputStream sourceInput = new FileInputStream(source);
+             OutputStream targetOutput = new FileOutputStream(target)) {
+            byte[] buffer = new byte[4 * 1024];
+            int read;
+            while ((read = sourceInput.read(buffer)) != -1) {
+                targetOutput.write(buffer, 0, read);
+            }
+            targetOutput.flush();
         }
     }
 

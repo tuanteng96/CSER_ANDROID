@@ -30,6 +30,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
@@ -37,8 +38,8 @@ import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.util.concurrent.ExecutionException;
 
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -336,34 +337,17 @@ public class QRCodeFragment extends Fragment {
 
     @Nullable
     private Bitmap decodeBitmap(@NonNull Uri uri) throws IOException {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        InputStream inputStream = requireActivity().getContentResolver().openInputStream(uri);
-        if (inputStream == null) {
-            return null;
-        }
         try {
-            BitmapFactory.decodeStream(inputStream, null, options);
-        } finally {
-            inputStream.close();
-        }
-
-        int inSampleSize = 1;
-        while (options.outWidth / inSampleSize > MAX_BITMAP_DIMENSION
-                || options.outHeight / inSampleSize > MAX_BITMAP_DIMENSION) {
-            inSampleSize *= 2;
-        }
-
-        options.inJustDecodeBounds = false;
-        options.inSampleSize = inSampleSize;
-        inputStream = requireActivity().getContentResolver().openInputStream(uri);
-        if (inputStream == null) {
+            return Glide.with(requireContext())
+                    .asBitmap()
+                    .load(uri)
+                    .submit(MAX_BITMAP_DIMENSION, MAX_BITMAP_DIMENSION)
+                    .get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             return null;
-        }
-        try {
-            return BitmapFactory.decodeStream(inputStream, null, options);
-        } finally {
-            inputStream.close();
+        } catch (ExecutionException e) {
+            return null;
         }
     }
 
