@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
@@ -69,6 +70,8 @@ public class QRCodeFragment extends Fragment {
     private FrameLayout qrContainer;
     private boolean isSendNotif = false;
     private boolean isPickingImage = false;
+    private int systemTopInset = 0;
+    private int systemBottomInset = 0;
     private final ActivityResultLauncher<String> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), this::handlePickedImage);
 
@@ -85,7 +88,7 @@ public class QRCodeFragment extends Fragment {
         View closeButton = root.findViewById(R.id.ivClose);
         View flashButton = root.findViewById(R.id.ivFlash);
 
-        applyStatusBarSpacing(closeButton, flashButton);
+        applyWindowInsetsSpacing(closeButton, flashButton);
 
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,13 +107,16 @@ public class QRCodeFragment extends Fragment {
         methodRequiresPermission();
     }
 
-    private void applyStatusBarSpacing(@NonNull View closeButton, @NonNull View flashButton) {
+    private void applyWindowInsetsSpacing(@NonNull View closeButton, @NonNull View flashButton) {
         final int baseTopMarginPx = dpToPx(20);
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            int topInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-            updateTopMargin(closeButton, baseTopMarginPx + topInset);
-            updateTopMargin(flashButton, baseTopMarginPx + topInset);
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            systemTopInset = systemBars.top;
+            systemBottomInset = systemBars.bottom;
+            updateTopMargin(closeButton, baseTopMarginPx + systemTopInset);
+            updateTopMargin(flashButton, baseTopMarginPx + systemTopInset);
+            updateScanOverlayLayout();
             return insets;
         });
         ViewCompat.requestApplyInsets(root);
@@ -134,6 +140,21 @@ public class QRCodeFragment extends Fragment {
     private int dpToPx(int dp) {
         float density = requireContext().getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
+    }
+
+    private void updateBottomMargin(@NonNull View view, int bottomMargin) {
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+        if (!(layoutParams instanceof ViewGroup.MarginLayoutParams)) {
+            return;
+        }
+
+        ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) layoutParams;
+        if (marginLayoutParams.bottomMargin == bottomMargin) {
+            return;
+        }
+
+        marginLayoutParams.bottomMargin = bottomMargin;
+        view.setLayoutParams(marginLayoutParams);
     }
 
     private void methodRequiresPermission() {
@@ -406,11 +427,6 @@ public class QRCodeFragment extends Fragment {
         }
         overlayAdded = true;
 
-        int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        int screenHeight = getResources().getDisplayMetrics().heightPixels;
-        int scanSide = (int) (screenWidth * 0.68f);
-        int topMargin = (screenHeight - scanSide) / 2;
-
         View overlay = new View(requireContext());
         overlay.setLayoutParams(new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -421,18 +437,16 @@ public class QRCodeFragment extends Fragment {
         scanOverlay = overlay;
 
         View scanArea = new View(requireContext());
-        FrameLayout.LayoutParams areaParams = new FrameLayout.LayoutParams(scanSide, scanSide);
+        FrameLayout.LayoutParams areaParams = new FrameLayout.LayoutParams(1, 1);
         areaParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-        areaParams.topMargin = topMargin;
         scanArea.setLayoutParams(areaParams);
         scanArea.setBackgroundResource(android.R.color.transparent);
         qrContainer.addView(scanArea);
         scanAreaView = scanArea;
 
         View line = new View(requireContext());
-        FrameLayout.LayoutParams lineParams = new FrameLayout.LayoutParams(scanSide, 4);
+        FrameLayout.LayoutParams lineParams = new FrameLayout.LayoutParams(1, 4);
         lineParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-        lineParams.topMargin = topMargin;
         line.setLayoutParams(lineParams);
         line.setBackgroundColor(0xFFFFFFFF);
         qrContainer.addView(line);
@@ -450,7 +464,6 @@ public class QRCodeFragment extends Fragment {
         instructionParams.gravity = Gravity.TOP;
         instructionParams.leftMargin = 24;
         instructionParams.rightMargin = 24;
-        instructionParams.topMargin = topMargin + scanSide + 40;
         instruction.setLayoutParams(instructionParams);
         qrContainer.addView(instruction);
         instructionLabel = instruction;
@@ -480,12 +493,66 @@ public class QRCodeFragment extends Fragment {
                 pickImageLauncher.launch("image/*");
             }
         });
+        updateScanOverlayLayout();
+    }
 
+    private void updateScanOverlayLayout() {
+        if (root == null || qrContainer == null || scanAreaView == null || scanLine == null
+                || instructionLabel == null || photoButton == null) {
+            return;
+        }
+
+        int contentWidth = root.getWidth() > 0
+                ? root.getWidth()
+                : getResources().getDisplayMetrics().widthPixels;
+        int contentHeight = root.getHeight() > 0
+                ? root.getHeight()
+                : getResources().getDisplayMetrics().heightPixels;
+
+        int horizontalPadding = dpToPx(24);
+        int minTopSpacing = dpToPx(32);
+        int instructionSpacing = dpToPx(24);
+        int buttonBottomSpacing = dpToPx(24);
+        int scanSide = Math.min((int) (contentWidth * 0.68f), contentWidth - (horizontalPadding * 2));
+        int safeHeight = Math.max(0, contentHeight - systemTopInset - systemBottomInset);
+        int scanTop = systemTopInset + Math.max((safeHeight - scanSide) / 2, minTopSpacing);
+
+        FrameLayout.LayoutParams areaParams = (FrameLayout.LayoutParams) scanAreaView.getLayoutParams();
+        if (areaParams.width != scanSide || areaParams.height != scanSide || areaParams.topMargin != scanTop) {
+            areaParams.width = scanSide;
+            areaParams.height = scanSide;
+            areaParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+            areaParams.topMargin = scanTop;
+            scanAreaView.setLayoutParams(areaParams);
+        }
+
+        FrameLayout.LayoutParams lineParams = (FrameLayout.LayoutParams) scanLine.getLayoutParams();
+        if (lineParams.width != scanSide || lineParams.topMargin != scanTop) {
+            lineParams.width = scanSide;
+            lineParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+            lineParams.topMargin = scanTop;
+            scanLine.setLayoutParams(lineParams);
+        }
+
+        FrameLayout.LayoutParams instructionParams = (FrameLayout.LayoutParams) instructionLabel.getLayoutParams();
+        instructionParams.gravity = Gravity.TOP;
+        instructionParams.leftMargin = horizontalPadding;
+        instructionParams.rightMargin = horizontalPadding;
+        instructionParams.topMargin = scanTop + scanSide + instructionSpacing;
+        instructionLabel.setLayoutParams(instructionParams);
+
+        FrameLayout.LayoutParams buttonParams = (FrameLayout.LayoutParams) photoButton.getLayoutParams();
+        buttonParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        buttonParams.topMargin = 0;
+        buttonParams.bottomMargin = systemBottomInset + buttonBottomSpacing;
+        photoButton.setLayoutParams(buttonParams);
+
+        scanLine.clearAnimation();
         TranslateAnimation animation = new TranslateAnimation(0, 0, 0, scanSide - 4);
         animation.setDuration(2000);
         animation.setRepeatCount(TranslateAnimation.INFINITE);
         animation.setRepeatMode(TranslateAnimation.RESTART);
-        line.startAnimation(animation);
+        scanLine.startAnimation(animation);
     }
 
     interface QRCodeResult {

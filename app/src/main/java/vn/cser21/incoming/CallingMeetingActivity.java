@@ -1,8 +1,6 @@
 package vn.cser21.incoming;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.activity.EdgeToEdge;
-import androidx.activity.SystemBarStyle;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -43,12 +41,8 @@ public class CallingMeetingActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        EdgeToEdge.enable(
-                this,
-                SystemBarStyle.dark(Color.TRANSPARENT),
-                SystemBarStyle.dark(Color.TRANSPARENT)
-        );
         super.onCreate(savedInstanceState);
+        WindowCompat.enableEdgeToEdge(getWindow());
         setContentView(R.layout.activity_calling_meeting);
 
         View root = findViewById(R.id.calling_meeting_root);

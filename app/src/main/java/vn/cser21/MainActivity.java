@@ -31,8 +31,6 @@ import android.graphics.Rect;
 import android.os.Bundle;
 
 import androidx.annotation.RequiresApi;
-import androidx.activity.EdgeToEdge;
-import androidx.activity.SystemBarStyle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,6 +46,7 @@ import android.provider.Settings;
 import android.view.MotionEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.view.View;
@@ -374,14 +373,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @SuppressLint({"ClickableViewAccessibility", "WrongViewCast"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        EdgeToEdge.enable(
-                this,
-                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-        );
-
-        //go
         super.onCreate(savedInstanceState);
+        WindowCompat.enableEdgeToEdge(getWindow());
+        setTitle("");
 
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
 
@@ -427,6 +421,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         setContentView(R.layout.activity_main);
         FirebaseApp.initializeApp(getApplicationContext());
+        findViewById(android.R.id.content)
+                .setBackgroundColor(ContextCompat.getColor(this, R.color.colorApp));
+        findViewById(R.id.layout)
+                .setBackgroundColor(ContextCompat.getColor(this, R.color.colorApp));
 
 //        FirebaseMessaging.getInstance().getToken()
 //                .addOnCompleteListener(task -> {
@@ -493,12 +491,20 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     ? Math.max(sys.bottom, ime.bottom)
                     : sys.bottom;
 
-            v.setPadding(sys.left, sys.top, sys.right, bottom);
+            v.setPadding(sys.left, 0, sys.right, bottom);
+            ViewGroup.LayoutParams params = v.getLayoutParams();
+            if (params instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) params;
+                if (marginParams.topMargin != 0) {
+                    marginParams.topMargin = 0;
+                    v.setLayoutParams(marginParams);
+                }
+            }
             if (bottomNavigationBackground != null) {
                 bottomNavigationBackground.getLayoutParams().height = sys.bottom;
                 bottomNavigationBackground.requestLayout();
             }
-            root.setPadding(0, 0, 0, 0);
+            root.setPadding(0, sys.top, 0, 0);
             return insets;
         });
         ViewCompat.requestApplyInsets(webViewContainer);
@@ -603,7 +609,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         String jsonExtras = extras == null ? "{}" : gson.toJson(mapBundle(extras));
 
-        html = html.replace("<body>", "<body><script> var ANDROID_EXTRAS =" + jsonExtras + "; window.ANDROID_SAFE_AREA = { top: " + getStatusBarHeight() + ", bottom: " + getNavigationBarHeight() + " }; document.documentElement.style.setProperty('--f7-safe-area-top', window.ANDROID_SAFE_AREA.top + 'px'); document.documentElement.style.setProperty('--f7-safe-area-bottom', window.ANDROID_SAFE_AREA.bottom + 'px'); document.documentElement.style.setProperty('--android-safe-area-top', window.ANDROID_SAFE_AREA.top + 'px'); document.documentElement.style.setProperty('--android-safe-area-bottom', window.ANDROID_SAFE_AREA.bottom + 'px');</script>");
+        html = html.replace("<body>", "<body><script> var ANDROID_EXTRAS =" + jsonExtras + "; window.ANDROID_SAFE_AREA = { top: 0, bottom: " + getNavigationBarHeight() + " }; document.documentElement.style.setProperty('--f7-safe-area-top', window.ANDROID_SAFE_AREA.top + 'px'); document.documentElement.style.setProperty('--f7-safe-area-bottom', window.ANDROID_SAFE_AREA.bottom + 'px'); document.documentElement.style.setProperty('--android-safe-area-top', window.ANDROID_SAFE_AREA.top + 'px'); document.documentElement.style.setProperty('--android-safe-area-bottom', window.ANDROID_SAFE_AREA.bottom + 'px');</script>");
 
         Log.d("jsonExtras", jsonExtras);
         //DEV Remove

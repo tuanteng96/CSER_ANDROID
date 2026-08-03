@@ -1,8 +1,6 @@
 package vn.cser21.incoming;
 
 import androidx.annotation.RequiresApi;
-import androidx.activity.EdgeToEdge;
-import androidx.activity.SystemBarStyle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.TaskStackBuilder;
 import androidx.core.graphics.Insets;
@@ -63,12 +61,8 @@ public class IncomingCallActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        EdgeToEdge.enable(
-                this,
-                SystemBarStyle.dark(Color.TRANSPARENT),
-                SystemBarStyle.dark(Color.TRANSPARENT)
-        );
         super.onCreate(savedInstanceState);
+        WindowCompat.enableEdgeToEdge(getWindow());
         setContentView(R.layout.activity_incoming_call);
 
         View root = findViewById(R.id.incoming_call_root);
