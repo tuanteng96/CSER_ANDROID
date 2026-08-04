@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 
 android {
     namespace = "vn.cser21"
-    compileSdk 37
+    compileSdk = 37
     defaultConfig {
-        applicationId "vn.cservn2020"
-        minSdkVersion 23
-        targetSdkVersion 35
-        versionCode 4
-        versionName "4"
+        applicationId = "vn.cservn2020"
+        minSdk = 23
+        targetSdk = 35
+        versionCode = 4
+        versionName = "4"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildFeatures {
@@ -16,8 +16,8 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled = true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -25,13 +25,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    flavorDimensions "default"
+    flavorDimensions += "default"
 
     productFlavors {
         prod {
-            applicationId "vn.cservn2020"
-            versionCode 4
-            versionName "4"
+            applicationId = "vn.cservn2020"
+            versionCode = 4
+            versionName = "4"
         }
     }
 
@@ -52,9 +52,7 @@ dependencies {
     //noinspection GradleCompatible
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
-    implementation('com.google.firebase:firebase-messaging:25.1.1') {
-        exclude group: 'com.google.firebase', module: 'firebase-measurement-connector'
-    }
+    implementation 'com.google.firebase:firebase-messaging:25.1.1'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.google.android.gms:play-services-location:19.0.0'
     implementation 'com.google.android.gms:play-services-vision:20.1.3'
