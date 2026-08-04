@@ -1,6 +1,7 @@
 package vn.cser21.incoming;
 
 import androidx.annotation.RequiresApi;
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.TaskStackBuilder;
 import androidx.core.graphics.Insets;
@@ -62,7 +63,7 @@ public class IncomingCallActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WindowCompat.enableEdgeToEdge(getWindow());
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_incoming_call);
 
         View root = findViewById(R.id.incoming_call_root);
