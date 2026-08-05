@@ -203,6 +203,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
                     @Override
                     public void run() {
+                        applyAppBackgroundColor(color);
                         View webViewContainer = findViewById(R.id.webview_container);
                         if (webViewContainer != null) {
                             webViewContainer.setBackgroundColor(color);
@@ -349,6 +350,79 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
     }
 
+    private void configureEdgeToEdgeWindow() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+    }
+
+    private int getDefaultAppColor() {
+        return ContextCompat.getColor(this, R.color.colorApp);
+    }
+
+    private int getCurrentAppColor() {
+        String params = getKey("bgColor", null);
+        if (params != null) {
+            String[] arr = params.split(";");
+            if (arr.length > 0) {
+                try {
+                    return Color.parseColor(arr[0]);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return getDefaultAppColor();
+    }
+
+    private void applyAppBackgroundColor(int color) {
+        View content = findViewById(android.R.id.content);
+        if (content != null) {
+            content.setBackgroundColor(color);
+        }
+
+        View backgroundRoot = findViewById(R.id.layout);
+        if (backgroundRoot == null) {
+            return;
+        }
+
+        backgroundRoot.setBackgroundColor(color);
+        backgroundRoot.post(() -> {
+            int w = backgroundRoot.getWidth();
+            int h = backgroundRoot.getHeight();
+            if (w <= 0 || h <= 0) {
+                return;
+            }
+
+            int solidHeight = (int) (h * 0.2f);
+            int fadeHeight  = (int) (h * 0.2f);
+            int whiteStart  = solidHeight + fadeHeight;
+
+            Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bmp);
+            Paint paint = new Paint();
+            paint.setStyle(Paint.Style.FILL);
+
+            paint.setColor(color);
+            canvas.drawRect(0, 0, w, solidHeight, paint);
+
+            LinearGradient gradient = new LinearGradient(
+                    0, solidHeight, 0, solidHeight + fadeHeight,
+                    color, Color.WHITE,
+                    Shader.TileMode.CLAMP
+            );
+            paint.setShader(gradient);
+            canvas.drawRect(0, solidHeight, w, solidHeight + fadeHeight, paint);
+            paint.setShader(null);
+
+            paint.setColor(Color.WHITE);
+            canvas.drawRect(0, whiteStart, w, h, paint);
+
+            backgroundRoot.setBackground(new BitmapDrawable(backgroundRoot.getResources(), bmp));
+        });
+    }
+
     private Bitmap getBitmapFromAsset(String strName) throws IOException {
         AssetManager assetManager = getAssets();
         InputStream istr = assetManager.open(strName);
@@ -374,7 +448,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WindowCompat.enableEdgeToEdge(getWindow());
+        configureEdgeToEdgeWindow();
         setTitle("");
 
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
@@ -421,10 +495,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         setContentView(R.layout.activity_main);
         FirebaseApp.initializeApp(getApplicationContext());
-        findViewById(android.R.id.content)
-                .setBackgroundColor(ContextCompat.getColor(this, R.color.colorApp));
-        findViewById(R.id.layout)
-                .setBackgroundColor(ContextCompat.getColor(this, R.color.colorApp));
+        applyAppBackgroundColor(getCurrentAppColor());
 
 //        FirebaseMessaging.getInstance().getToken()
 //                .addOnCompleteListener(task -> {
@@ -441,39 +512,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 //                    SharedPreferences prefsNow = getSharedPreferences(getPackageName(), MODE_PRIVATE);
 //                    prefsNow.edit().putString("FirebaseNotiToken", token).apply();
 //                });
-
-
-        View backgroundRoot = findViewById(R.id.layout);
-        backgroundRoot.post(() -> {
-            int w = backgroundRoot.getWidth();
-            int h = backgroundRoot.getHeight();
-
-            int solidHeight = (int) (h * 0.2f);   // 20% hồng đặc
-            int fadeHeight  = (int) (h * 0.2f);   // 20% fade
-            int whiteStart  = solidHeight + fadeHeight; // bắt đầu vùng trắng đặc
-
-            Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bmp);
-            Paint paint = new Paint();
-            paint.setStyle(Paint.Style.FILL);
-
-            paint.setColor(ContextCompat.getColor(this, R.color.colorApp));
-            canvas.drawRect(0, 0, w, solidHeight, paint);
-
-            LinearGradient gradient = new LinearGradient(
-                    0, solidHeight, 0, solidHeight + fadeHeight,
-                    ContextCompat.getColor(this, R.color.colorApp), Color.WHITE,
-                    Shader.TileMode.CLAMP
-            );
-            paint.setShader(gradient);
-            canvas.drawRect(0, solidHeight, w, solidHeight + fadeHeight, paint);
-            paint.setShader(null);
-
-            paint.setColor(Color.WHITE);
-            canvas.drawRect(0, whiteStart, w, h, paint);
-
-            backgroundRoot.setBackground(new BitmapDrawable(backgroundRoot.getResources(), bmp));
-        });
 
         applyEdgeToEdgeSystemUi(true);
 

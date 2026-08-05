@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorApp">#ff898d</color>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#6200EE</color>
-    <color name="colorAccent">#6200EE</color>
+    <color name="colorPrimary">@color/colorApp</color>
+    <color name="colorPrimaryDark">@color/colorApp</color>
+    <color name="colorAccent">@color/colorApp</color>
     <color name="black_overlay">#66000000</color>
     <color name="bg">#eee</color>
     <color name="white">#ffffff</color>

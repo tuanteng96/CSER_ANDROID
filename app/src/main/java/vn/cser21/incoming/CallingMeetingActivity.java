@@ -9,10 +9,10 @@ import androidx.core.view.WindowInsetsCompat;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -42,7 +42,7 @@ public class CallingMeetingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WindowCompat.enableEdgeToEdge(getWindow());
+        configureEdgeToEdgeWindow();
         setContentView(R.layout.activity_calling_meeting);
 
         View root = findViewById(R.id.calling_meeting_root);
@@ -146,5 +146,13 @@ public class CallingMeetingActivity extends AppCompatActivity {
         mediaPlayer.pause();
         mediaPlayer.release();
         mediaPlayer = null;
+    }
+
+    private void configureEdgeToEdgeWindow() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
     }
 }
