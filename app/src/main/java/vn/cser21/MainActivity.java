@@ -31,7 +31,6 @@ import android.graphics.Rect;
 import android.os.Bundle;
 
 import androidx.annotation.RequiresApi;
-import androidx.activity.EdgeToEdge;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
@@ -375,7 +374,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+        WindowCompat.enableEdgeToEdge(getWindow());
         setTitle("");
 
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);

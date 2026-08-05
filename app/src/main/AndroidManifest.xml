@@ -82,8 +82,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".EdgeToEdgeCaptureActivity" />
-        <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             tools:node="remove" />
 
