@@ -131,35 +131,51 @@ public class DownloadFilesTask extends AsyncTask<String, String, String> {
                 // 3. Download and decode the bitmap using BitmapFactory
                 File file = new File(directory, fname);
                 if (isImageAddress(address)) {
-                    File downloadedFile = Glide.with(app21.mContext.getApplicationContext())
-                            .asFile()
-                            .load(address)
-                            .submit()
-                            .get();
-                    copyFile(downloadedFile, file);
+                    downloadImageWithGlide(address, file);
                     localPath = file.getAbsolutePath();
                     continue;
                 }
 
                 // 1. Declare a URL Connection
                 URL url = new URL(address);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                // 2. Open InputStream to connection
-                conn.connect();
-                in = conn.getInputStream();
+                HttpURLConnection conn = null;
+                try {
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.connect();
 
-                try (OutputStream output = new FileOutputStream(file)) {
-                    byte[] buffer = new byte[4 * 1024];
-                    int read;
-
-                    while ((read = in.read(buffer)) != -1) {
-                        output.write(buffer, 0, read);
+                    if (isImageContentType(conn.getContentType())) {
+                        downloadImageWithGlide(address, file);
+                        localPath = file.getAbsolutePath();
+                        continue;
                     }
 
-                    output.flush();
-                    localPath = file.getAbsolutePath();
-                }
+                    // 2. Open InputStream to connection
+                    in = conn.getInputStream();
 
+                    try (OutputStream output = new FileOutputStream(file)) {
+                        byte[] buffer = new byte[4 * 1024];
+                        int read;
+
+                        while ((read = in.read(buffer)) != -1) {
+                            output.write(buffer, 0, read);
+                        }
+
+                        output.flush();
+                        localPath = file.getAbsolutePath();
+                    }
+                } finally {
+                    if (conn != null) {
+                        conn.disconnect();
+                    }
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        in = null;
+                    }
+                }
 
             }
         } catch (InterruptedException e) {
@@ -268,6 +284,20 @@ public class DownloadFilesTask extends AsyncTask<String, String, String> {
                 || "heic".equals(ext)
                 || "heif".equals(ext)
                 || "avif".equals(ext);
+    }
+
+    private boolean isImageContentType(String contentType) {
+        return contentType != null && contentType.toLowerCase().startsWith("image/");
+    }
+
+    private void downloadImageWithGlide(String address, File file)
+            throws ExecutionException, InterruptedException, IOException {
+        File downloadedFile = Glide.with(app21.mContext.getApplicationContext())
+                .asFile()
+                .load(address)
+                .submit()
+                .get();
+        copyFile(downloadedFile, file);
     }
 
     private void copyFile(File source, File target) throws IOException {

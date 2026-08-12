@@ -440,9 +440,25 @@ public class App21 {
     }
 
     Bitmap fromFile(File file) {
-
         String filePath = file.getPath();
-        return BitmapFactory.decodeFile(filePath);
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(filePath, bounds);
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = calculateInSampleSize(bounds, 2048, 2048);
+        return BitmapFactory.decodeFile(filePath, options);
+    }
+
+    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        int height = options.outHeight;
+        int width = options.outWidth;
+        int inSampleSize = 1;
+
+        while ((height / inSampleSize) > reqHeight || (width / inSampleSize) > reqWidth) {
+            inSampleSize *= 2;
+        }
+        return Math.max(1, inSampleSize);
     }
 
     void CAMERA(final Result result) {
