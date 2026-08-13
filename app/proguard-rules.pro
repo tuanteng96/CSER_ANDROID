@@ -30,6 +30,11 @@
     @org.greenrobot.eventbus.Subscribe <methods>;
 }
 
+# Keep App21 command handlers invoked by name from JavaScript payloads.
+-keepclassmembers class vn.cser21.App21 {
+    void *(vn.cser21.Result);
+}
+
 # Keep Firebase messaging services declared in the manifest.
 -keep class * extends com.google.firebase.messaging.FirebaseMessagingService
 

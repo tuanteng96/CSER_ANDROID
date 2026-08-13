@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -114,13 +113,7 @@ public class App21 {
             if (c.has("params"))
                 rs.params = c.getString("params");
 
-
-            Method method = App21.class.getDeclaredMethod(rs.sub_cmd, Result.class);
-
-
-            if (method.equals(null)) throw new Throwable("NO_" + rs.sub_cmd);
-            method.setAccessible(true);
-            method.invoke(this, rs);
+            dispatchCommand(rs);
 
         } catch (Throwable tx) {
             //nothing to do
@@ -129,6 +122,112 @@ public class App21 {
             rs.error = tx.toString();
             rs.data = "";
             App21Result(rs);
+        }
+    }
+
+    private void dispatchCommand(Result rs) throws Throwable {
+        switch (rs.sub_cmd) {
+            case "REBOOT":
+                REBOOT(rs);
+                return;
+            case "BACKGROUND":
+                BACKGROUND(rs);
+                return;
+            case "SET_BADGE":
+                SET_BADGE(rs);
+                return;
+            case "OPEN_QRCODE":
+                OPEN_QRCODE(rs);
+                return;
+            case "FINISH_ACTIVITY":
+                FINISH_ACTIVITY(rs);
+                return;
+            case "CAMERA":
+                CAMERA(rs);
+                return;
+            case "FILE":
+                FILE(rs);
+                return;
+            case "DELETE_FILE":
+                DELETE_FILE(rs);
+                return;
+            case "REQUIRE_PERMISSIONS":
+                REQUIRE_PERMISSIONS(rs);
+                return;
+            case "LOCATION":
+                LOCATION(rs);
+                return;
+            case "DOWNLOAD":
+                DOWNLOAD(rs);
+                return;
+            case "GET_DOWNLOADED":
+                GET_DOWNLOADED(rs);
+                return;
+            case "CLEAR_DOWNLOAD":
+                CLEAR_DOWNLOAD(rs);
+                return;
+            case "POST_TO_SERVER":
+                POST_TO_SERVER(rs);
+                return;
+            case "NOTI":
+                NOTI(rs);
+                return;
+            case "NOTI_DATA":
+                NOTI_DATA(rs);
+                return;
+            case "CLEAR_WEBVIEW_DATA":
+                CLEAR_WEBVIEW_DATA(rs);
+                return;
+            case "GET_PHONE":
+                GET_PHONE(rs);
+                return;
+            case "SEND_SMS":
+                SEND_SMS(rs);
+                return;
+            case "ALARM_NOTI":
+                ALARM_NOTI(rs);
+                return;
+            case "GET_SERVER_NOTI":
+                GET_SERVER_NOTI(rs);
+                return;
+            case "IMAGE_ROTATE":
+                IMAGE_ROTATE(rs);
+                return;
+            case "VIBRATOR":
+                VIBRATOR(rs);
+                return;
+            case "WV_VISIBLE":
+                WV_VISIBLE(rs);
+                return;
+            case "GET_TEXT":
+                GET_TEXT(rs);
+                return;
+            case "RECORD_AUDIO":
+                RECORD_AUDIO(rs);
+                return;
+            case "RECORD_VIDEO":
+                RECORD_VIDEO(rs);
+                return;
+            case "BROWSER":
+                BROWSER(rs);
+                return;
+            case "GET_INFO":
+                GET_INFO(rs);
+                return;
+            case "TEL":
+                TEL(rs);
+                return;
+            case "SHARE_OPEN":
+                SHARE_OPEN(rs);
+                return;
+            case "KEY":
+                KEY(rs);
+                return;
+            case "GET_NOTI_TOKEN":
+                GET_NOTI_TOKEN(rs);
+                return;
+            default:
+                throw new NoSuchMethodException("NO_" + rs.sub_cmd);
         }
     }
 
